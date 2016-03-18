@@ -20,7 +20,7 @@ public:
 	virtual void BeginPlay() override;
 	
 	// Called every frame
-	virtual void Tick( float DeltaSeconds ) override;
+	//virtual void Tick( float DeltaSeconds ) override;
 
 private:
 	TArray<AActor*> roomMeshes;		// Walls, Corners and floors.
