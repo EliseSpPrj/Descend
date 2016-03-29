@@ -73,7 +73,7 @@ void ALevelGen::generateRooms(uint8 count)
 			Room* newRoom = new Room(xCoord, yCoord, roomType);
 			rooms[roomIndex] = newRoom;
 			roomIndex++;
-			GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("Added room at: ") + FString::FromInt(xCoord) + FString::FString(", ") + FString::FromInt(yCoord));
+			GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] Added room at: ") + FString::FromInt(xCoord) + FString::FString(", ") + FString::FromInt(yCoord));
 		}
 		
 		// Walk randomly or straight depending on the straightness factor.
@@ -136,7 +136,7 @@ void ALevelGen::generateRooms(uint8 count)
 			if ((!roomNorth || roomNorth && !roomNorth->built) && (!roomWest || roomWest && !roomWest->built))
 			{
 				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner2, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner1, wallPosition, FRotator::ZeroRotator, spawnParams);
 				roomMeshes.Add(wall);
 			}
 			
@@ -144,7 +144,7 @@ void ALevelGen::generateRooms(uint8 count)
 			if ((!roomNorth || roomNorth && !roomNorth->built) && (!roomEast || roomEast && !roomEast->built))
 			{
 				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth + roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner2, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner1, wallPosition, FRotator::ZeroRotator, spawnParams);
 				roomMeshes.Add(wall);
 			}
 
@@ -152,7 +152,7 @@ void ALevelGen::generateRooms(uint8 count)
 			if ((!roomSouth || roomSouth && !roomSouth->built) && (!roomWest || roomWest && !roomWest->built))
 			{
 				wallPosition.Set(rooms[i]->y * roomHeight - roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner2, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner1, wallPosition, FRotator::ZeroRotator, spawnParams);
 				roomMeshes.Add(wall);
 			}
 
@@ -160,7 +160,7 @@ void ALevelGen::generateRooms(uint8 count)
 			if ((!roomSouth || roomSouth && !roomSouth->built) && (!roomEast || roomEast && !roomEast->built))
 			{
 				wallPosition.Set(rooms[i]->y * roomHeight - roomHeight, rooms[i]->x * roomWidth + roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner2, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner1, wallPosition, FRotator::ZeroRotator, spawnParams);
 				roomMeshes.Add(wall);
 			}
 
