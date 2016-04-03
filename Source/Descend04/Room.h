@@ -19,6 +19,7 @@ public:
 	int32 x;
 	int32 y;
 	Room::Type type;
+	TArray<AActor*> doors;
 
 	static Direction getInverseDirection(Direction direction);
 	static Direction getRandomDirection();

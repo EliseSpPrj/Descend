@@ -4,7 +4,9 @@
 
 #include "GameFramework/Actor.h"
 #include "RoomWall.h"
+#include "RoomTrigger.h"
 #include "Room.h"
+#include "Pickup.h"
 #include "LevelGen.generated.h"
 
 UCLASS()
@@ -22,6 +24,15 @@ public:
 	// Called every frame
 	//virtual void Tick( float DeltaSeconds ) override;
 
+	UFUNCTION(BlueprintCallable, Category = "This function generates a new level")
+		void generateRooms(uint8 count);
+
+	UFUNCTION(BlueprintCallable, Category = "Close all door in this room")
+		void lockRoom(ARoomTrigger* roomTriggered);
+
+	UFUNCTION(BlueprintCallable, Category = "Open all door in this room")
+		void unlockRoom(ARoomTrigger* roomTriggered);
+
 private:
 	TArray<AActor*> roomMeshes;		// Walls, Corners and floors.
 	Room* rooms[256];
@@ -29,9 +40,6 @@ private:
 
 	Room* getRoomAt(int32 x, int32 y);
 
-	UFUNCTION(BlueprintCallable, Category = "This function generates a new level")
-	void generateRooms(uint8 count);
-	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Room floor")
 	TSubclassOf<ARoomWall> roomFloor;
@@ -48,11 +56,26 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Room long door")
 	TSubclassOf<ARoomWall> roomLongDoor;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Room corner1")
-	TSubclassOf<ARoomWall> roomCorner1;
+	UPROPERTY(EditDefaultsOnly, Category = "Room corner")
+	TSubclassOf<ARoomWall> roomCorner;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Room corner2")
-	TSubclassOf<ARoomWall> roomCorner2;
+	UPROPERTY(EditDefaultsOnly, Category = "Room door horizontal")
+	TSubclassOf<ARoomWall> roomDoorHorizontal;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Room door vertical")
+	TSubclassOf<ARoomWall> roomDoorVertical;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Room trigger")
+	TSubclassOf<ARoomTrigger> roomTrigger;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Room shop")
+	TSubclassOf<ARoomWall> roomShop;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Shop items")
+	TArray<TSubclassOf<APickup>> shopItems;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enemies")
+	TArray<TSubclassOf<ACharacter>> enemies;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Amount of rooms to generate")
 	uint8 numGenRooms;

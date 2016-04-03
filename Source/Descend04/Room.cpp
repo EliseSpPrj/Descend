@@ -5,6 +5,7 @@
 
 Room::Room(int32 x, int32 y, Room::Type type) : x(x), y(y), type(type), built(false)
 {
+	doors.SetNumZeroed(0);
 }
 
 Room::~Room()
