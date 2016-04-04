@@ -34,11 +34,13 @@ public:
 		void unlockRoom(ARoomTrigger* roomTriggered);
 
 private:
-	TArray<AActor*> roomMeshes;		// Walls, Corners and floors.
+	TArray<AActor*> roomMeshes;			// Walls, Corners, floors etc.
 	Room* rooms[256];
 	int roomsCount;
+	float const floorLevel = 200.f;		// Height; where to spawn stuff.
 
 	Room* getRoomAt(int32 x, int32 y);
+	AActor* spawnThing(TSubclassOf<AActor> thing, float x, float y, float z = 0);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Room floor")

@@ -16,8 +16,11 @@ public:
 	~Room();
 
 	bool built;
+	bool locked;
 	int32 x;
 	int32 y;
+	float const roomWidth = 1140;
+	float const roomHeight = 780;
 	Room::Type type;
 	TArray<AActor*> doors;
 

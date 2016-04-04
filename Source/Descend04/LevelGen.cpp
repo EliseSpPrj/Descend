@@ -61,7 +61,7 @@ void ALevelGen::generateRooms(uint8 count)
 	// Delete ingame objects
 	for (AActor* mesh : roomMeshes)
 	{
-		mesh->Destroy();	// Delete previous rooms, if any.
+		mesh->Destroy();	// Delete previous room walls etc, if any.
 	}
 	roomMeshes.Empty();
 	roomsCount = count;
@@ -73,8 +73,12 @@ void ALevelGen::generateRooms(uint8 count)
 
 	if (roomsCount > 3) shopPos = roomsCount / 2;
 
-	// Generate layout
-	for (int32 roomIndex = 0, INFILOOP = 0; roomIndex < count && INFILOOP < 10000; INFILOOP++)
+	/*
+	 #
+	 #  Generate layout
+	 #
+	 */
+	for (int32 roomIndex = 0, INFILOOP = 0; roomIndex < roomsCount && INFILOOP < 10000; INFILOOP++)
 	{
 		// Try make a room at current position
 		if(getRoomAt(xCoord, yCoord) == nullptr)
@@ -155,217 +159,211 @@ void ALevelGen::generateRooms(uint8 count)
 		}
 	}
 
-	// Build the rooms
-	FVector wallPosition;
-	wallPosition.Set(0,0,0);
-
-	float floorLevel = 200.f;
-	float roomWidth = 1140;
-	float roomHeight = 780;
-
-	Room* roomNorth = nullptr;
-	Room* roomSouth = nullptr;
-	Room* roomWest = nullptr;
-	Room* roomEast = nullptr;
-
-	FActorSpawnParameters spawnParams;
-	spawnParams.Owner = this;
-	spawnParams.Instigator = Instigator;
-
-	for (int i = 0; i < roomsCount; i++)
+	/*
+	 #
+	 #  Build the rooms
+	 #
+	 */
+	for (int i = roomsCount - 1; i >= 0; i--)
 	{
-		if(rooms[i])
+		bool builtBossDoor = false;
+		if(rooms[i] && !rooms[i]->built)
 		{
 			// Get adjacent rooms
-			roomNorth = getRoomAt(rooms[i]->x, rooms[i]->y + 1);	// North = y+1
-			roomSouth = getRoomAt(rooms[i]->x, rooms[i]->y - 1);	// South = y-1
-			roomWest = getRoomAt(rooms[i]->x - 1, rooms[i]->y);		// West = x-1
-			roomEast = getRoomAt(rooms[i]->x + 1, rooms[i]->y);		// East = x+1
+			Room* roomNorth = getRoomAt(rooms[i]->x, rooms[i]->y + 1);		// North = y+1
+			Room* roomSouth = getRoomAt(rooms[i]->x, rooms[i]->y - 1);		// South = y-1
+			Room* roomWest = getRoomAt(rooms[i]->x - 1, rooms[i]->y);		// West = x-1
+			Room* roomEast = getRoomAt(rooms[i]->x + 1, rooms[i]->y);		// East = x+1
 
 			// Floor (notice: x & y are reversed in the world)
-			wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-			AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomFloor, wallPosition, FRotator::ZeroRotator, spawnParams);
+			AActor* wall = spawnThing(roomFloor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 			roomMeshes.Add(wall);
 
 			// NW corner
-			if ((!roomNorth || roomNorth && !roomNorth->built) && (!roomWest || roomWest && !roomWest->built))
+			if ((!roomNorth || !roomNorth->built) && (!roomWest || !roomWest->built))
 			{
-				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 			
 			// NE corner
-			if ((!roomNorth || roomNorth && !roomNorth->built) && (!roomEast || roomEast && !roomEast->built))
+			if ((!roomNorth || !roomNorth->built) && (!roomEast || !roomEast->built))
 			{
-				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth + roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 
 			// SW corner
-			if ((!roomSouth || roomSouth && !roomSouth->built) && (!roomWest || roomWest && !roomWest->built))
+			if ((!roomSouth || !roomSouth->built) && (!roomWest || !roomWest->built))
 			{
-				wallPosition.Set(rooms[i]->y * roomHeight - roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight - rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 
 			// SE corner
-			if ((!roomSouth || roomSouth && !roomSouth->built) && (!roomEast || roomEast && !roomEast->built))
+			if ((!roomSouth || !roomSouth->built) && (!roomEast || !roomEast->built))
 			{
-				wallPosition.Set(rooms[i]->y * roomHeight - roomHeight, rooms[i]->x * roomWidth + roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomCorner, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight - rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 
 			// North long wall
-			if(roomNorth && rooms[i]->type != Room::Type::SHOP)	// Don't build a door north if this room is a shop
+			if(roomNorth && rooms[i]->type != Room::Type::SHOP && (!builtBossDoor))	// Don't build a door north if this room is a shop
 			{
 				if (!roomNorth->built)
 				{
 					// There is a room north of us and no walls have been placed on it. Let's build a door to that room.
-					wallPosition.Set(rooms[i]->y * roomHeight + roomHeight, rooms[i]->x * roomWidth, floorLevel);
-					AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomLongDoor, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* wall = spawnThing(roomLongDoor, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					wallPosition.Set(rooms[i]->y * roomHeight + roomHeight, rooms[i]->x * roomWidth, floorLevel);
-					AActor* door = GetWorld()->SpawnActor<ARoomWall>(roomDoorHorizontal, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomNorth->doors.Add(door);		// Add a handle to this door into the adjacent room.
+
+					if(rooms[i]->type == Room::Type::BOSS) builtBossDoor = true;	// This works as we're looping backwards and the last room is the boss room.
 				}
 			}
 			else
 			{
 				// There is no room north of us. Let's build a wall.
-				wallPosition.Set(rooms[i]->y * roomHeight + roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomLongWall, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomLongWall, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 
 			// South long wall
-			if (roomSouth && roomSouth->type != Room::Type::SHOP)	// Don't build a door to shop from north
+			if (roomSouth && roomSouth->type != Room::Type::SHOP && (!builtBossDoor))	// Don't build a door to shop from north
 			{
 				if (!roomSouth->built)
 				{
 					// There is a room south of us and no walls have been placed on it. Let's build a door to that room.
-					wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-					AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomLongDoor, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* wall = spawnThing(roomLongDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-					AActor* door = GetWorld()->SpawnActor<ARoomWall>(roomDoorHorizontal, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomSouth->doors.Add(door);		// Add a handle to this door into the adjacent room.
+
+					if (rooms[i]->type == Room::Type::BOSS) builtBossDoor = true;
 				}
 			}
 			else
 			{
 				// There is no room south of us. Let's build a wall.
-				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomLongWall, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomLongWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 
 			// West short wall
-			if (roomWest)
+			if (roomWest && (!builtBossDoor))
 			{
 				if (!roomWest->built)
 				{
 					// There is a room west of us and no walls have been placed on it. Let's build a door to that room.
-					wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-					AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomShortDoor, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* wall = spawnThing(roomShortDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-					AActor* door = GetWorld()->SpawnActor<ARoomWall>(roomDoorVertical, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomWest->doors.Add(door);		// Add a handle to this door into the adjacent room.
+
+					if (rooms[i]->type == Room::Type::BOSS) builtBossDoor = true;
 				}
 			}
 			else
 			{
 				// There is no room west of us. Let's build a wall.
-				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomShortWall, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomShortWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 
 			// East short wall
-			if (roomEast)
+			if (roomEast && (!builtBossDoor))
 			{
 				if (!roomEast->built)
 				{
 					// There is a room east of us and no walls have been placed on it. Let's build a door to that room.
-					wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth + roomWidth, floorLevel);
-					AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomShortDoor, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* wall = spawnThing(roomShortDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth + roomWidth, floorLevel);
-					AActor* door = GetWorld()->SpawnActor<ARoomWall>(roomDoorVertical, wallPosition, FRotator::ZeroRotator, spawnParams);
+					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomEast->doors.Add(door);		// Add a handle to this door into the adjacent room.
+
+					if (rooms[i]->type == Room::Type::BOSS) builtBossDoor = true;
 				}
 			}
 			else
 			{
 				// There is no room east of us. Let's build a wall.
-				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth + roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomShortWall, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomShortWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 			}
 
-			// Handle room content
+			/*
+			 #
+			 #  Handle room content
+			 #
+			 */
 			if (rooms[i]->type == Room::Type::SHOP)
 			{
 				// Spawn in the shop walls
-				wallPosition.Set(rooms[i]->y * roomHeight + (roomHeight - 234 - 60), rooms[i]->x * roomWidth, floorLevel);
-				AActor* wall = GetWorld()->SpawnActor<ARoomWall>(roomShop, wallPosition, FRotator::ZeroRotator, spawnParams);
+				AActor* wall = spawnThing(roomShop, rooms[i]->y * rooms[i]->roomHeight + (rooms[i]->roomHeight - 234 - 60), rooms[i]->x * rooms[i]->roomWidth);
 				roomMeshes.Add(wall);
 
-				// Spawn in the shop items	// TODO: how many? item weight
-				for (TSubclassOf<APickup> shopItem : shopItems)
+
+				// Spawn in the shop items
+				int32 amountToSpawn = 3;
+				TArray<TSubclassOf<APickup>> spawnItems = TArray<TSubclassOf<APickup>>(shopItems);
+
+				for (int32 j = 0; j < amountToSpawn && j < shopItems.Num() && spawnItems.Num() > 0; j++)
 				{
-					wallPosition.Set(rooms[i]->y * roomHeight + 290, rooms[i]->x * roomWidth - 250 + (0 * 250), floorLevel + 40);
-					AActor* newItem = GetWorld()->SpawnActor<APickup>(shopItem, wallPosition, FRotator::ZeroRotator, spawnParams);
+					TSubclassOf<APickup> spawnItem = spawnItems[FMath::RandRange(0, spawnItems.Num() - 1)];
+
+					AActor* newItem = spawnThing(spawnItem, rooms[i]->y * rooms[i]->roomHeight + 290, rooms[i]->x * rooms[i]->roomWidth - 250 + (j * 250), 40.f);
 					roomMeshes.Add(newItem);
+
+					spawnItems.Remove(spawnItem);
 				}
 			}
 			else if (rooms[i]->type == Room::Type::NORMAL)
 			{
 				// Spawn in the room trigger
-				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* trigger = GetWorld()->SpawnActor<ARoomTrigger>(roomTrigger, wallPosition, FRotator::ZeroRotator, spawnParams);
-				roomMeshes.Add(trigger);
+				AActor* newTrigger = spawnThing(roomTrigger, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				roomMeshes.Add(newTrigger);
 
-				ARoomTrigger* trig = Cast<ARoomTrigger>(trigger);
-				trig->setPosition(rooms[i]->x, rooms[i]->y);
+				ARoomTrigger* trigger = Cast<ARoomTrigger>(newTrigger);
+				if (trigger)
+					trigger->setPosition(rooms[i]->x, rooms[i]->y);
 			}
 			else if (rooms[i]->type == Room::Type::BOSS)
 			{
 				// Spawn in the room trigger
-				wallPosition.Set(rooms[i]->y * roomHeight, rooms[i]->x * roomWidth, floorLevel);
-				AActor* trigger = GetWorld()->SpawnActor<ARoomTrigger>(roomTrigger, wallPosition, FRotator::ZeroRotator, spawnParams);
-				roomMeshes.Add(trigger);
+				AActor* newTrigger = spawnThing(roomTrigger, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				roomMeshes.Add(newTrigger);
 
-				ARoomTrigger* trig = Cast<ARoomTrigger>(trigger);
-				trig->setPosition(rooms[i]->x, rooms[i]->y);
+				ARoomTrigger* trigger = Cast<ARoomTrigger>(newTrigger);
+				if(trigger)
+					trigger->setPosition(rooms[i]->x, rooms[i]->y);
+			}
+			else if (rooms[i]->type == Room::Type::START)
+			{
+
 			}
 
 			rooms[i]->built = true;
@@ -375,7 +373,53 @@ void ALevelGen::generateRooms(uint8 count)
 	
 }
 
+/**
+ * Closes all doors connected to this room and spawns in the mobs.
+ *
+ * @param	roomTriggered	the room to be locked.
+ */
 void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
+{
+	int32 x = roomTriggered->getPosition().X;
+	int32 y = roomTriggered->getPosition().Y;
+
+	Room* room = getRoomAt(x, y);
+
+	if (room->locked) return;
+	room->locked = true;
+
+	for (AActor* door : room->doors)
+	{
+		door->SetActorHiddenInGame(false);
+		door->SetActorEnableCollision(true);
+	}
+
+	if (room->type == Room::Type::NORMAL)
+	{
+		for (TSubclassOf<ACharacter> enemy : enemies)
+		{
+			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+		}
+	}
+	else if (room->type == Room::Type::BOSS)
+	{
+		for (TSubclassOf<ACharacter> enemy : enemies)
+		{
+			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+		}
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] LOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
+}
+
+/**
+ * Opens all doors connected to this room.
+ *
+ * @param	roomTriggered	the room to be unlocked.
+ */
+void ALevelGen::unlockRoom(ARoomTrigger* roomTriggered)
 {
 	int32 x = roomTriggered->getPosition().X;
 	int32 y = roomTriggered->getPosition().Y;
@@ -384,50 +428,32 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 
 	for (AActor* door : room->doors)
 	{
-		door->SetActorHiddenInGame(false);
-		door->SetActorEnableCollision(true);
+		door->SetActorHiddenInGame(true);
+		door->SetActorEnableCollision(false);
 	}
 
-	FVector position;
-	float floorLevel = 200.f;
-	float roomWidth = 1140;
-	float roomHeight = 780;
+	room->locked = false;
+	
+	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] UNLOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
+}
 
+/**
+ * Spawns an actor into the world.
+ *
+ * @param	thing	the actor to be spawned in.
+ * @param	x		horizontal location in the world
+ * @param	y		vertical location in the world
+ * @param	z		height location in the world above "floorLevel" (200)
+ * @return			returns a reference to the actor spawned or nullptr if spawning fails.
+ */
+AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float z)
+{
 	FActorSpawnParameters spawnParams;
 	spawnParams.Owner = this;
 	spawnParams.Instigator = Instigator;
 
-	if (room->type == Room::Type::NORMAL)
-	{
-		for (TSubclassOf<ACharacter> enemy : enemies)
-		{
-			position.Set(room->y * roomHeight, room->x * roomWidth, floorLevel + 40);
-			//AActor* newItem = GetWorld()->SpawnActor<ACharacter>(enemy, position, FRotator::ZeroRotator, spawnParams);
-		}
-	}
-	else if (room->type == Room::Type::BOSS)
-	{
-		for (TSubclassOf<ACharacter> enemy : enemies)
-		{
-			position.Set(room->y * roomHeight, room->x * roomWidth, floorLevel + 40);
-			//AActor* newItem = GetWorld()->SpawnActor<ACharacter>(enemy, position, FRotator::ZeroRotator, spawnParams);
-			//AActor* newItem2 = GetWorld()->SpawnActor<ACharacter>(enemy, position, FRotator::ZeroRotator, spawnParams);
-		}
-	}
+	FVector position;
+	position.Set(x, y, floorLevel + z);
 
-	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] LOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
-}
-
-void ALevelGen::unlockRoom(ARoomTrigger* room)
-{
-	int32 x = room->getPosition().X;
-	int32 y = room->getPosition().Y;
-
-	for (AActor* door : getRoomAt(x, y)->doors)
-	{
-		door->SetActorHiddenInGame(true);
-		door->SetActorEnableCollision(false);
-	}
-	
-	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] UNLOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
+	return GetWorld()->SpawnActor<AActor>(thing, position, FRotator::ZeroRotator, spawnParams);
 }

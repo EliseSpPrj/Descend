@@ -3,7 +3,7 @@
 #include "Descend04.h"
 #include "Room.h"
 
-Room::Room(int32 x, int32 y, Room::Type type) : x(x), y(y), type(type), built(false)
+Room::Room(int32 x, int32 y, Room::Type type) : x(x), y(y), type(type), built(false), locked(false)
 {
 	doors.SetNumZeroed(0);
 }
