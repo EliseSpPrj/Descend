@@ -79,7 +79,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemies")
 	TArray<TSubclassOf<ACharacter>> enemies;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Amount of rooms to generate")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Amount of rooms to generate")
 	uint8 numGenRooms;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Straightness factor (0 to 100)")

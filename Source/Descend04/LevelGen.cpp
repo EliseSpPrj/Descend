@@ -331,7 +331,7 @@ void ALevelGen::generateRooms(uint8 count)
 				int32 amountToSpawn = 3;
 				TArray<TSubclassOf<APickup>> spawnItems = TArray<TSubclassOf<APickup>>(shopItems);
 
-				for (int32 j = 0; j < amountToSpawn && j < shopItems.Num() && spawnItems.Num() > 0; j++)
+				for (int32 j = 0; j < amountToSpawn && spawnItems.Num() > 0; j++)
 				{
 					TSubclassOf<APickup> spawnItem = spawnItems[FMath::RandRange(0, spawnItems.Num() - 1)];
 
@@ -339,6 +339,7 @@ void ALevelGen::generateRooms(uint8 count)
 					roomMeshes.Add(newItem);
 
 					spawnItems.Remove(spawnItem);
+					//GEngine->AddOnScreenDebugMessage(-1, 20, FColor::Red, TEXT("[RndGen] Spawned shop item!"));
 				}
 			}
 			else if (rooms[i]->type == Room::Type::NORMAL)
@@ -349,7 +350,10 @@ void ALevelGen::generateRooms(uint8 count)
 
 				ARoomTrigger* trigger = Cast<ARoomTrigger>(newTrigger);
 				if (trigger)
+				{
 					trigger->setPosition(rooms[i]->x, rooms[i]->y);
+					trigger->type = (uint8)rooms[i]->type;
+				}
 			}
 			else if (rooms[i]->type == Room::Type::BOSS)
 			{
@@ -358,8 +362,11 @@ void ALevelGen::generateRooms(uint8 count)
 				roomMeshes.Add(newTrigger);
 
 				ARoomTrigger* trigger = Cast<ARoomTrigger>(newTrigger);
-				if(trigger)
+				if (trigger)
+				{
 					trigger->setPosition(rooms[i]->x, rooms[i]->y);
+					trigger->type = (uint8)rooms[i]->type;
+				}
 			}
 			else if (rooms[i]->type == Room::Type::START)
 			{
