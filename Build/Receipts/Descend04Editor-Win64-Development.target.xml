@@ -7,9 +7,15 @@
     <Property Name="Precompile" Value="False" />
   </Properties>
   <BuildProducts>
+<<<<<<< HEAD
     <BuildProduct Path="$(ProjectDir)\Binaries\Win64\UE4Editor-Descend04-2586.dll" Type="DynamicLibrary" />
     <BuildProduct Path="$(ProjectDir)\Binaries\Win64\UE4Editor-Descend04-2586.pdb" Type="SymbolFile" />
     <BuildProduct Path="$(ProjectDir)\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-Descend04-2586.lib" Type="ImportLibrary" />
+=======
+    <BuildProduct Path="$(ProjectDir)\Binaries\Win64\UE4Editor-Descend04-6762.dll" Type="DynamicLibrary" />
+    <BuildProduct Path="$(ProjectDir)\Binaries\Win64\UE4Editor-Descend04-6762.pdb" Type="SymbolFile" />
+    <BuildProduct Path="$(ProjectDir)\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-Descend04-6762.lib" Type="ImportLibrary" />
+>>>>>>> 57cd8d1a1fd65583f6efcc61ae9a8fbf0abc1a04
   </BuildProducts>
   <RuntimeDependencies />
   <AdditionalProperties />
