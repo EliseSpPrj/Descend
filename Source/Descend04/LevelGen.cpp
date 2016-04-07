@@ -4,7 +4,7 @@
 #include "LevelGen.h"
 
 // Sets default values
-ALevelGen::ALevelGen()
+ALevelGen::ALevelGen() : scalingFactor(1.f)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -93,14 +93,14 @@ void ALevelGen::generateRooms(uint8 count)
 			else
 				roomType = Room::Type::NORMAL;
 
-			Room* newRoom = new Room(xCoord, yCoord, roomType);
+			Room* newRoom = new Room(xCoord, yCoord, roomType, scalingFactor);
 			rooms[roomIndex] = newRoom;
 			roomIndex++;
-			GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] Added room (T:") + FString::FromInt((int)roomType) + FString::FString(") at: ") + FString::FromInt(xCoord) + FString::FString(", ") + FString::FromInt(yCoord));
+			//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] Added room (T:") + FString::FromInt((int)roomType) + FString::FString(") at: ") + FString::FromInt(xCoord) + FString::FString(", ") + FString::FromInt(yCoord));
 		}
 		
 		// Walk randomly or straight depending on the straightness factor.
-		if (straightFactor == 0 || FMath::RandRange(1, 100 / straightFactor) != 1 || (roomIndex == shopPos && direction == Room::Direction::SOUTH) || (roomIndex -1 == shopPos && direction == Room::Direction::NORTH)) {
+		if (straightFactor == 0 || FMath::RandRange(1, 100 / straightFactor) != 1 || ((getRoomAt(xCoord, yCoord - 1) && getRoomAt(xCoord, yCoord - 1)->type == Room::Type::SHOP) && direction == Room::Direction::SOUTH) || ((getRoomAt(xCoord, yCoord) && getRoomAt(xCoord, yCoord)->type == Room::Type::SHOP) && direction == Room::Direction::NORTH)) {
 			
 			backDirection = Room::getInverseDirection(direction);
 			bool foundRoomSpawnPosition = false;
@@ -176,34 +176,34 @@ void ALevelGen::generateRooms(uint8 count)
 			Room* roomEast = getRoomAt(rooms[i]->x + 1, rooms[i]->y);		// East = x+1
 
 			// Floor (notice: x & y are reversed in the world)
-			AActor* wall = spawnThing(roomFloor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+			AActor* wall = spawnThing(roomFloor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 			roomMeshes.Add(wall);
 
 			// NW corner
 			if ((!roomNorth || !roomNorth->built) && (!roomWest || !roomWest->built))
 			{
-				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 			
 			// NE corner
 			if ((!roomNorth || !roomNorth->built) && (!roomEast || !roomEast->built))
 			{
-				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 
 			// SW corner
 			if ((!roomSouth || !roomSouth->built) && (!roomWest || !roomWest->built))
 			{
-				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight - rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight - rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 
 			// SE corner
 			if ((!roomSouth || !roomSouth->built) && (!roomEast || !roomEast->built))
 			{
-				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight - rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomCorner, rooms[i]->y * rooms[i]->roomHeight - rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 
@@ -213,11 +213,11 @@ void ALevelGen::generateRooms(uint8 count)
 				if (!roomNorth->built)
 				{
 					// There is a room north of us and no walls have been placed on it. Let's build a door to that room.
-					AActor* wall = spawnThing(roomLongDoor, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+					AActor* wall = spawnThing(roomLongDoor, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
@@ -230,7 +230,7 @@ void ALevelGen::generateRooms(uint8 count)
 			else
 			{
 				// There is no room north of us. Let's build a wall.
-				AActor* wall = spawnThing(roomLongWall, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomLongWall, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 
@@ -240,11 +240,11 @@ void ALevelGen::generateRooms(uint8 count)
 				if (!roomSouth->built)
 				{
 					// There is a room south of us and no walls have been placed on it. Let's build a door to that room.
-					AActor* wall = spawnThing(roomLongDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+					AActor* wall = spawnThing(roomLongDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
@@ -257,7 +257,7 @@ void ALevelGen::generateRooms(uint8 count)
 			else
 			{
 				// There is no room south of us. Let's build a wall.
-				AActor* wall = spawnThing(roomLongWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomLongWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 
@@ -267,11 +267,11 @@ void ALevelGen::generateRooms(uint8 count)
 				if (!roomWest->built)
 				{
 					// There is a room west of us and no walls have been placed on it. Let's build a door to that room.
-					AActor* wall = spawnThing(roomShortDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+					AActor* wall = spawnThing(roomShortDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
@@ -284,7 +284,7 @@ void ALevelGen::generateRooms(uint8 count)
 			else
 			{
 				// There is no room west of us. Let's build a wall.
-				AActor* wall = spawnThing(roomShortWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomShortWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 
@@ -294,11 +294,11 @@ void ALevelGen::generateRooms(uint8 count)
 				if (!roomEast->built)
 				{
 					// There is a room east of us and no walls have been placed on it. Let's build a door to that room.
-					AActor* wall = spawnThing(roomShortDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
+					AActor* wall = spawnThing(roomShortDoor, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth, 0, scalingFactor);
 					roomMeshes.Add(wall);
 
 					// Let's put a door in that opening.
-					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
+					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth, 0, scalingFactor);
 					door->SetActorHiddenInGame(true);
 					door->SetActorEnableCollision(false);
 					roomMeshes.Add(door);
@@ -311,7 +311,7 @@ void ALevelGen::generateRooms(uint8 count)
 			else
 			{
 				// There is no room east of us. Let's build a wall.
-				AActor* wall = spawnThing(roomShortWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomShortWall, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 			}
 
@@ -323,7 +323,7 @@ void ALevelGen::generateRooms(uint8 count)
 			if (rooms[i]->type == Room::Type::SHOP)
 			{
 				// Spawn in the shop walls
-				AActor* wall = spawnThing(roomShop, rooms[i]->y * rooms[i]->roomHeight + (rooms[i]->roomHeight - 234 - 60), rooms[i]->x * rooms[i]->roomWidth);
+				AActor* wall = spawnThing(roomShop, rooms[i]->y * rooms[i]->roomHeight + (rooms[i]->roomHeight - 234 * scalingFactor - 60 * scalingFactor), rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(wall);
 
 
@@ -335,7 +335,7 @@ void ALevelGen::generateRooms(uint8 count)
 				{
 					TSubclassOf<APickup> spawnItem = spawnItems[FMath::RandRange(0, spawnItems.Num() - 1)];
 
-					AActor* newItem = spawnThing(spawnItem, rooms[i]->y * rooms[i]->roomHeight + 290, rooms[i]->x * rooms[i]->roomWidth - 250 + (j * 250), 40.f);
+					AActor* newItem = spawnThing(spawnItem, rooms[i]->y * rooms[i]->roomHeight + (240 * scalingFactor), rooms[i]->x * rooms[i]->roomWidth - ((230 + (j * 230)) * scalingFactor), 40.f);
 					roomMeshes.Add(newItem);
 
 					spawnItems.Remove(spawnItem);
@@ -345,7 +345,7 @@ void ALevelGen::generateRooms(uint8 count)
 			else if (rooms[i]->type == Room::Type::NORMAL)
 			{
 				// Spawn in the room trigger
-				AActor* newTrigger = spawnThing(roomTrigger, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				AActor* newTrigger = spawnThing(roomTrigger, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(newTrigger);
 
 				ARoomTrigger* trigger = Cast<ARoomTrigger>(newTrigger);
@@ -358,7 +358,7 @@ void ALevelGen::generateRooms(uint8 count)
 			else if (rooms[i]->type == Room::Type::BOSS)
 			{
 				// Spawn in the room trigger
-				AActor* newTrigger = spawnThing(roomTrigger, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth);
+				AActor* newTrigger = spawnThing(roomTrigger, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
 				roomMeshes.Add(newTrigger);
 
 				ARoomTrigger* trigger = Cast<ARoomTrigger>(newTrigger);
@@ -391,6 +391,7 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 	int32 y = roomTriggered->getPosition().Y;
 
 	Room* room = getRoomAt(x, y);
+	if (!room) return;
 
 	if (room->locked) return;
 	room->locked = true;
@@ -418,7 +419,7 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 		}
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] LOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
+	//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] LOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
 }
 
 /**
@@ -441,7 +442,7 @@ void ALevelGen::unlockRoom(ARoomTrigger* roomTriggered)
 
 	room->locked = false;
 	
-	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] UNLOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
+	//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] UNLOCK room: ") + FString::FromInt(x) + FString::FString(", ") + FString::FromInt(y));
 }
 
 /**
@@ -451,9 +452,10 @@ void ALevelGen::unlockRoom(ARoomTrigger* roomTriggered)
  * @param	x		horizontal location in the world
  * @param	y		vertical location in the world
  * @param	z		height location in the world above "floorLevel" (200)
+ * @param	scale	scale the actors mesh
  * @return			returns a reference to the actor spawned or nullptr if spawning fails.
  */
-AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float z)
+AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float z, float scale)
 {
 	FActorSpawnParameters spawnParams;
 	spawnParams.Owner = this;
@@ -462,5 +464,34 @@ AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float
 	FVector position;
 	position.Set(x, y, floorLevel + z);
 
-	return GetWorld()->SpawnActor<AActor>(thing, position, FRotator::ZeroRotator, spawnParams);
+	AActor* newThing = GetWorld()->SpawnActor<AActor>(thing, position, FRotator::ZeroRotator, spawnParams);
+	
+	if (scale != 1.f)
+	{
+		UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(newThing->GetComponentByClass(UStaticMeshComponent::StaticClass()));
+		if (StaticMeshComponent)
+		{
+			FTransform Transform = StaticMeshComponent->GetComponentTransform();
+
+			Transform = Transform.GetScaled(scale);		// Resize object
+			//Transform.ScaleTranslation(scale);			// Re-position object
+
+			StaticMeshComponent->SetWorldTransform(Transform);
+		}
+		else
+		{
+			UBoxComponent* CollisionComponent = Cast<UBoxComponent>(newThing->GetComponentByClass(UBoxComponent::StaticClass()));
+			if (CollisionComponent)
+			{
+				FTransform Transform = CollisionComponent->GetComponentTransform();
+
+				Transform = Transform.GetScaled(scale);		// Resize object
+				//Transform.ScaleTranslation(scale);			// Re-position object
+
+				CollisionComponent->SetWorldTransform(Transform);
+			}
+		}
+	}
+
+	return newThing;
 }

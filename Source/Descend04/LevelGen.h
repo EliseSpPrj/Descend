@@ -40,7 +40,7 @@ private:
 	float const floorLevel = 200.f;		// Height; where to spawn stuff.
 
 	Room* getRoomAt(int32 x, int32 y);
-	AActor* spawnThing(TSubclassOf<AActor> thing, float x, float y, float z = 0);
+	AActor* spawnThing(TSubclassOf<AActor> thing, float x, float y, float z = 0, float scale = 1.0);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Room floor")
@@ -84,4 +84,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Straightness factor (0 to 100)")
 	uint8 straightFactor;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Scaling of the room parts (wall, floor etc)")
+	float scalingFactor;
 };

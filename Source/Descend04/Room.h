@@ -12,15 +12,15 @@ public:
 	enum class Direction { NORTH, SOUTH, WEST, EAST };
 	enum class Type { START, NORMAL, SHOP, BOSS };
 
-	Room(int32 x, int32 y, Room::Type type);
+	Room(int32 x, int32 y, Room::Type type, float scaleRoomDimensions = 1.f);
 	~Room();
 
 	bool built;
 	bool locked;
 	int32 x;
 	int32 y;
-	float const roomWidth = 1140;
-	float const roomHeight = 780;
+	float roomWidth = 1140;
+	float roomHeight = 780;
 	Room::Type type;
 	TArray<AActor*> doors;
 

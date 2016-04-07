@@ -3,9 +3,14 @@
 #include "Descend04.h"
 #include "Room.h"
 
-Room::Room(int32 x, int32 y, Room::Type type) : x(x), y(y), type(type), built(false), locked(false)
+Room::Room(int32 x, int32 y, Room::Type type, float scaleRoomDimensions) : x(x), y(y), type(type), built(false), locked(false)
 {
 	doors.SetNumZeroed(0);
+	if (scaleRoomDimensions != 1.f)
+	{
+		roomWidth *= scaleRoomDimensions;
+		roomHeight *= scaleRoomDimensions;
+	}
 }
 
 Room::~Room()
