@@ -10,6 +10,7 @@ ALevelGen::ALevelGen() : scalingFactor(1.f)
 	PrimaryActorTick.bCanEverTick = false;
 
 	roomMeshes.SetNumZeroed(0);
+	props.SetNumZeroed(0);
 }
 
 // Called when the game starts or when spawned
@@ -354,6 +355,11 @@ void ALevelGen::generateRooms(uint8 count)
 					trigger->setPosition(rooms[i]->x, rooms[i]->y);
 					trigger->type = (uint8)rooms[i]->type;
 				}
+
+				// Spawn in props
+				spawnProps(rooms[i], 1, 3);
+				//GEngine->AddOnScreenDebugMessage(-1, 20, FColor::Red, TEXT("[RndGen] prop in: ") + FString::FromInt(i));
+				
 			}
 			else if (rooms[i]->type == Room::Type::BOSS)
 			{
@@ -455,7 +461,7 @@ void ALevelGen::unlockRoom(ARoomTrigger* roomTriggered)
  * @param	scale	scale the actors mesh
  * @return			returns a reference to the actor spawned or nullptr if spawning fails.
  */
-AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float z, float scale)
+AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float z, float scale, FRotator rotation)
 {
 	FActorSpawnParameters spawnParams;
 	spawnParams.Owner = this;
@@ -464,7 +470,7 @@ AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float
 	FVector position;
 	position.Set(x, y, floorLevel + z);
 
-	AActor* newThing = GetWorld()->SpawnActor<AActor>(thing, position, FRotator::ZeroRotator, spawnParams);
+	AActor* newThing = GetWorld()->SpawnActor<AActor>(thing, position, rotation, spawnParams);
 	
 	if (scale != 1.f)
 	{
@@ -494,4 +500,152 @@ AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float
 	}
 
 	return newThing;
+}
+
+/**
+ * Spawn an amount of props in a room.
+ * 
+ * @param	room		which room to spawn props in.
+ * @param	minCount	minimum amount of props to spawn.
+ * @param	maxCount	maximum amount of props to spawn.
+ * @return				return the number of props actually spawned.
+ */
+int32 ALevelGen::spawnProps(Room* room, int32 minCount, int32 maxCount)
+{
+	if (minCount < 0) minCount = 0;
+	if (maxCount < minCount) maxCount = minCount;
+
+	int32 numberOfProps = FMath::RandRange(minCount, maxCount);
+	int32 numberPropsSpawned = 0;
+
+	for (int i = 0; i < numberOfProps; i++)
+	{
+		// Random prop
+		TSubclassOf<AActor> prop = props[FMath::RandRange(0, props.Num() - 1)];
+
+		if (prop)
+		{
+			// Check if it's a wall prop (reading blueprint properties is hard)
+			bool IsWallProp = false;
+			static const FName PropertyName(TEXT("IsWallProp"));
+			for (UProperty* Property = prop->PropertyLink; Property; Property = Property->PropertyLinkNext)
+			{
+				UBoolProperty* BoolProperty = Cast<UBoolProperty>(Property);
+				if (BoolProperty && BoolProperty->GetFName() == PropertyName)
+				{
+					//IsWallProp = BoolProperty->GetPropertyValue(Property->ContainerPtrToValuePtr<bool>(prop));
+					IsWallProp = true;		// The above crashes, prolly cause prop is not instanciated yet, quick fix: if the BP has the property assume it's always true.
+					break;
+				}
+			}
+
+			if (IsWallProp)
+			{
+				// Spawn wall prop.
+
+				int32 wallChosen = FMath::RandRange(1, 4);
+				float xPosMulti = 0, yPosMulti = 0;				// Multipliers for horizontal and vertical position.
+				float propZ = 150.0;
+				FRotator rotation = FRotator::ZeroRotator;
+
+				switch (wallChosen)
+				{
+				case 1:
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] spawning wall prop NORTH"));
+					// Let's say this is the north wall
+					xPosMulti = FMath::RandRange(10, 90) / 100.f;
+					if (getRoomAt(room->x, room->y + 1))
+					{
+						for (xPosMulti = FMath::RandRange(10, 90) / 100.f; xPosMulti >= 0.35 && xPosMulti <= 0.65; xPosMulti = FMath::RandRange(10, 90) / 100.f) {}	// If positioned inside the doorway: reroll.
+					}
+					yPosMulti = 0.025;	// Padding from wall
+					rotation = FRotator(0, 270, 0);
+				}break;
+				case 2:
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] spawning wall prop SOUTH"));
+					// Let's say this is the south wall
+					xPosMulti = FMath::RandRange(10, 90) / 100.f;
+					if (getRoomAt(room->x, room->y - 1))
+					{
+						for (xPosMulti = FMath::RandRange(10, 90) / 100.f; xPosMulti >= 0.35 && xPosMulti <= 0.65; xPosMulti = FMath::RandRange(10, 90) / 100.f) {}	// If positioned inside the doorway: reroll.
+					}
+					yPosMulti = 0.975;
+					rotation = FRotator(0, 90, 0);
+				}break;
+				case 3:
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] spawning wall WEST"));
+					// Let's say this is the west wall
+					yPosMulti = FMath::RandRange(10, 90) / 100.f;
+					if (getRoomAt(room->x - 1, room->y))
+					{
+						for (yPosMulti = FMath::RandRange(10, 90) / 100.f; yPosMulti >= 0.35 && yPosMulti <= 0.65; yPosMulti = FMath::RandRange(10, 90) / 100.f) {}	// If positioned inside the doorway: reroll.
+					}
+					xPosMulti = 0.975;
+					rotation = FRotator(0, 180, 0);
+				}break;
+				case 4:
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] spawning wall prop EAST"));
+					// Let's say this is the east wall
+					yPosMulti = FMath::RandRange(10, 90) / 100.f;
+					if (getRoomAt(room->x + 1, room->y))
+					{
+						for (yPosMulti = FMath::RandRange(10, 90) / 100.f; yPosMulti >= 0.35 && yPosMulti <= 0.65; yPosMulti = FMath::RandRange(10, 90) / 100.f) {}	// If positioned inside the doorway: reroll.
+					}
+					xPosMulti = 0.025;
+					rotation = FRotator(0, 0, 0);
+				}break;
+				}
+
+				float x = room->x * room->roomWidth + ((room->roomWidth / 2) - room->roomWidth * xPosMulti);
+				float y = room->y * room->roomHeight + ((room->roomHeight / 2) - room->roomHeight * yPosMulti);
+
+				if (roomMeshes.Add(spawnThing(prop, y, x, propZ, scalingFactor, rotation)))
+					numberPropsSpawned++;
+			}
+			else
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] spawning floor prop"));
+				// Spawn floor prop.
+
+				// Select random horizontal and vertical position (factor) that is not close to a doorway.
+				// Doorways are assumed to protrude 40% and span 30%, also add 10% padding from the walls.
+				float horizontalMultiplier = FMath::RandRange(10, 90) / 100.f;
+				float verticalMultiplier = 0;
+				if (horizontalMultiplier <= 0.4 && getRoomAt(room->x + 1, room->y))	// West doorway protrudes 40%
+				{
+					for (verticalMultiplier = FMath::RandRange(10, 90) / 100.f; verticalMultiplier >= 0.35 && verticalMultiplier <= 0.65; verticalMultiplier = FMath::RandRange(10, 90) / 100.f) {}	// If positioned inside the (west) doorway: reroll.
+				}
+				else if (horizontalMultiplier >= 0.6 && getRoomAt(room->x - 1, room->y))	// East doorway protrudes 40%
+				{
+					for (verticalMultiplier = FMath::RandRange(10, 90) / 100.f; verticalMultiplier >= 0.35 && verticalMultiplier <= 0.65; verticalMultiplier = FMath::RandRange(10, 90) / 100.f) {}	// If positioned inside the (east) doorway: reroll.
+				}
+				else if (horizontalMultiplier >= 0.35 && horizontalMultiplier <= 0.65)	// North/south doorways spans 30%
+				{
+					int32 northOffset = getRoomAt(room->x, room->y - 1) ? 60 : 90;	// Is there a room north? Set offset that doesn't collide with the north doorway.
+					int32 southOffset = getRoomAt(room->x, room->y + 1) ? 40 : 10;	// Is there a room south? Set offset that doesn't collide with the south doorway.
+
+					verticalMultiplier = FMath::RandRange(southOffset, northOffset) / 100.f;
+				}
+				else		// Not colliding with a doorway
+				{
+					verticalMultiplier = FMath::RandRange(10, 90) / 100.f;
+				}
+
+				float x = room->x * room->roomWidth + ((room->roomWidth / 2) - room->roomWidth * horizontalMultiplier);
+				float y = room->y * room->roomHeight + ((room->roomHeight / 2) - room->roomHeight * verticalMultiplier);
+
+				// Random rotation
+				FRotator rotation = FRotator(0, (FMath::RandRange(0, 36000) / 100.f), 0);
+
+				if (roomMeshes.Add(spawnThing(prop, y, x, 0, scalingFactor, rotation)))
+					numberPropsSpawned++;
+			}
+		}
+	}
+
+	return numberPropsSpawned;
 }
