@@ -10,6 +10,7 @@ ALevelGen::ALevelGen() : scalingFactor(1.f)
 	PrimaryActorTick.bCanEverTick = false;
 
 	roomMeshes.SetNumZeroed(0);
+	props.SetNumZeroed(0);
 }
 
 // Called when the game starts or when spawned
@@ -354,6 +355,11 @@ void ALevelGen::generateRooms(uint8 count)
 					trigger->setPosition(rooms[i]->x, rooms[i]->y);
 					trigger->type = (uint8)rooms[i]->type;
 				}
+
+				// Spawn in props
+				spawnProps(rooms[i], 1, 3);
+				//GEngine->AddOnScreenDebugMessage(-1, 20, FColor::Red, TEXT("[RndGen] prop in: ") + FString::FromInt(i));
+				
 			}
 			else if (rooms[i]->type == Room::Type::BOSS)
 			{
@@ -455,7 +461,7 @@ void ALevelGen::unlockRoom(ARoomTrigger* roomTriggered)
  * @param	scale	scale the actors mesh
  * @return			returns a reference to the actor spawned or nullptr if spawning fails.
  */
-AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float z, float scale)
+AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float z, float scale, FRotator rotation)
 {
 	FActorSpawnParameters spawnParams;
 	spawnParams.Owner = this;
@@ -464,7 +470,7 @@ AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float
 	FVector position;
 	position.Set(x, y, floorLevel + z);
 
-	AActor* newThing = GetWorld()->SpawnActor<AActor>(thing, position, FRotator::ZeroRotator, spawnParams);
+	AActor* newThing = GetWorld()->SpawnActor<AActor>(thing, position, rotation, spawnParams);
 	
 	if (scale != 1.f)
 	{
@@ -494,4 +500,71 @@ AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float
 	}
 
 	return newThing;
+}
+
+/**
+ * Spawn an amount of props in a room.
+ * 
+ * @param	room		which room to spawn props in.
+ * @param	minCount	minimum amount of props to spawn.
+ * @param	maxCount	maximum amount of props to spawn.
+ * @return				return the number of props actually spawned.
+ */
+int32 ALevelGen::spawnProps(Room* room, int32 minCount, int32 maxCount)
+{
+	if (minCount < 0) minCount = 0;
+	if (maxCount < minCount) maxCount = minCount;
+
+	int32 numberOfProps = FMath::RandRange(minCount, maxCount);
+
+	for (int i = 0; i < numberOfProps && props.Num() > 0; i++)
+	{
+		// Random prop
+		TSubclassOf<AActor> prop = props[FMath::RandRange(0, props.Num() - 1)];
+
+		// Check if it's a wall prop
+		bool IsWallProp = false;
+		static const FName PropertyName(TEXT("IsWallProp"));
+		for (UProperty* Property = prop->PropertyLink; Property; Property = Property->PropertyLinkNext)
+		{
+			UBoolProperty* BoolProperty = Cast<UBoolProperty>(Property);
+			if (BoolProperty && BoolProperty->GetFName() == PropertyName)
+			{
+				//IsWallProp = BoolProperty->GetPropertyValue(Property->ContainerPtrToValuePtr<bool>(prop));
+				IsWallProp = true;		// The above crashes, prolly cause prop is not instanciated yet, quick fix.
+				break;
+			}
+		}
+
+		if (IsWallProp)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] spawning wall prop"));
+
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, TEXT("[RndGen] spawning floor prop"));
+
+
+
+			////loop to check if pos & rot is ok (don't place in front of door etc)
+			// or solve this by setting x and then setting an apropiate y.
+			float horizontalMultiplier = FMath::RandRange(0, 100) / 100.f;
+			float verticalMultiplier = FMath::RandRange(0, 100) / 100.f;
+
+			float x = room->x * room->roomWidth + ((room->roomWidth / 2) - room->roomWidth * horizontalMultiplier);
+			float y = room->y * room->roomHeight + ((room->roomHeight / 2) - room->roomHeight * verticalMultiplier);
+			
+			// Random rotation
+			FRotator rotation = FRotator(0, (FMath::RandRange(0, 36000) / 100.f), 0);
+			
+
+
+
+
+			roomMeshes.Add(spawnThing(prop, y, x, 0, scalingFactor, rotation));
+		}
+	}
+
+	return 0;
 }

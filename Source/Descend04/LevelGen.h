@@ -40,7 +40,8 @@ private:
 	float const floorLevel = 200.f;		// Height; where to spawn stuff.
 
 	Room* getRoomAt(int32 x, int32 y);
-	AActor* spawnThing(TSubclassOf<AActor> thing, float x, float y, float z = 0, float scale = 1.0);
+	AActor* spawnThing(TSubclassOf<AActor> thing, float x, float y, float z = 0, float scale = 1.0, FRotator rotation = FRotator::ZeroRotator);
+	int32 spawnProps(Room* room, int32 minCount, int32 maxCount);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Room floor")
@@ -78,6 +79,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemies")
 	TArray<TSubclassOf<ACharacter>> enemies;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Props")
+	TArray<TSubclassOf<AActor>> props;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Amount of rooms to generate")
 	uint8 numGenRooms;
