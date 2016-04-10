@@ -518,7 +518,7 @@ int32 ALevelGen::spawnProps(Room* room, int32 minCount, int32 maxCount)
 	int32 numberOfProps = FMath::RandRange(minCount, maxCount);
 	int32 numberPropsSpawned = 0;
 
-	for (int i = 0; i < numberOfProps; i++)
+	for (int i = 0; i < numberOfProps && props.Num(); i++)
 	{
 		// Random prop
 		TSubclassOf<AActor> prop = props[FMath::RandRange(0, props.Num() - 1)];
