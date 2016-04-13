@@ -4,7 +4,7 @@
 #include "LevelGen.h"
 
 // Sets default values
-ALevelGen::ALevelGen() : scalingFactor(1.f)
+ALevelGen::ALevelGen() : scalingFactor(1.f), currentLevel(0)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -73,6 +73,7 @@ void ALevelGen::generateRooms(uint8 count)
 	Room::Type roomType;
 
 	if (roomsCount > 3) shopPos = roomsCount / 2;
+	currentLevel++;
 
 	/*
 	 #
@@ -393,6 +394,7 @@ void ALevelGen::generateRooms(uint8 count)
  */
 void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 {
+	float spawnX, spawnY;
 	int32 x = roomTriggered->getPosition().X;
 	int32 y = roomTriggered->getPosition().Y;
 
@@ -410,18 +412,46 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 
 	if (room->type == Room::Type::NORMAL)
 	{
-		for (TSubclassOf<ACharacter> enemy : enemies)
+		if (enemiesByLevel.Num())
 		{
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+			int32 esdsIndex = currentLevel >= enemiesByLevel.Num() ? 0 : currentLevel;
+
+			FEnemySpawnDataset esDS = enemiesByLevel[esdsIndex];
+
+			for (int32 i = 0; i < esDS.NumberToSpawn; i++)
+			{
+				int32 randomIndex = FMath::RandRange(0, esDS.SelectionOfEnemies.Num() - 1);
+
+				spawnX = room->y * room->roomHeight;		// Room center (x and y are flipped in world).
+				spawnY = room->x * room->roomWidth;			// Room center.
+
+				spawnX += FMath::RandRange((room->roomHeight / 6) * -1, (room->roomHeight / 6));	// Add randomness.
+				spawnY += FMath::RandRange((room->roomWidth / 6) * -1, (room->roomWidth / 6));		// Add randomness.
+
+				spawnThing(esDS.SelectionOfEnemies[randomIndex], spawnX, spawnY, 40.f);
+			}
 		}
 	}
 	else if (room->type == Room::Type::BOSS)
 	{
-		for (TSubclassOf<ACharacter> enemy : enemies)
+		if (bossesByLevel.Num())
 		{
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+			int32 esdsIndex = currentLevel >= bossesByLevel.Num() ? 0 : currentLevel;
+
+			FEnemySpawnDataset esDS = bossesByLevel[esdsIndex];
+
+			for (int32 i = 0; i < esDS.NumberToSpawn; i++)
+			{
+				int32 randomIndex = FMath::RandRange(0, esDS.SelectionOfEnemies.Num() - 1);
+
+				spawnX = room->y * room->roomHeight;		// Room center (x and y are flipped in world).
+				spawnY = room->x * room->roomWidth;			// Room center.
+
+				spawnX += FMath::RandRange((room->roomHeight / 6) * -1, (room->roomHeight / 6));	// Add randomness.
+				spawnY += FMath::RandRange((room->roomWidth / 6) * -1, (room->roomWidth / 6));		// Add randomness.
+
+				spawnThing(esDS.SelectionOfEnemies[randomIndex], spawnX, spawnY, 40.f);
+			}
 		}
 	}
 

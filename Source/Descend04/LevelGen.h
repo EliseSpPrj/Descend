@@ -9,6 +9,18 @@
 #include "Pickup.h"
 #include "LevelGen.generated.h"
 
+USTRUCT(BlueprintType)
+struct FEnemySpawnDataset
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 NumberToSpawn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<AActor>> SelectionOfEnemies;
+};
+
 UCLASS()
 class DESCEND04_API ALevelGen : public AActor
 {
@@ -37,6 +49,7 @@ private:
 	TArray<AActor*> roomMeshes;			// Walls, Corners, floors etc.
 	Room* rooms[256];
 	int roomsCount;
+	int32 currentLevel;
 	float const floorLevel = 200.f;		// Height; where to spawn stuff.
 
 	Room* getRoomAt(int32 x, int32 y);
@@ -77,9 +90,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Shop items")
 	TArray<TSubclassOf<APickup>> shopItems;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Enemies")
-	TArray<TSubclassOf<ACharacter>> enemies;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Props")
 	TArray<TSubclassOf<AActor>> props;
 
@@ -91,4 +101,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Scaling of the room parts (wall, floor etc)")
 	float scalingFactor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn enemies by level (index = level, 0 = fallback)")
+	TArray<FEnemySpawnDataset> enemiesByLevel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn bosses by level (index = level, 0 = fallback)")
+	TArray<FEnemySpawnDataset> bossesByLevel;
 };
