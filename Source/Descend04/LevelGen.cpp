@@ -220,8 +220,10 @@ void ALevelGen::generateRooms(uint8 count)
 
 					// Let's put a door in that opening.
 					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight + rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
-					door->SetActorHiddenInGame(true);
-					door->SetActorEnableCollision(false);
+					
+					UFunction* func = door->FindFunction(FName("OpenDoor"));
+					if (func) door->ProcessEvent(func, nullptr);
+
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomNorth->doors.Add(door);		// Add a handle to this door into the adjacent room.
@@ -247,8 +249,10 @@ void ALevelGen::generateRooms(uint8 count)
 
 					// Let's put a door in that opening.
 					AActor* door = spawnThing(roomDoorHorizontal, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
-					door->SetActorHiddenInGame(true);
-					door->SetActorEnableCollision(false);
+					
+					UFunction* func = door->FindFunction(FName("OpenDoor"));
+					if (func) door->ProcessEvent(func, nullptr);
+
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomSouth->doors.Add(door);		// Add a handle to this door into the adjacent room.
@@ -274,8 +278,10 @@ void ALevelGen::generateRooms(uint8 count)
 
 					// Let's put a door in that opening.
 					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth, 0, scalingFactor);
-					door->SetActorHiddenInGame(true);
-					door->SetActorEnableCollision(false);
+					
+					UFunction* func = door->FindFunction(FName("OpenDoor"));
+					if (func) door->ProcessEvent(func, nullptr);
+
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomWest->doors.Add(door);		// Add a handle to this door into the adjacent room.
@@ -301,8 +307,10 @@ void ALevelGen::generateRooms(uint8 count)
 
 					// Let's put a door in that opening.
 					AActor* door = spawnThing(roomDoorVertical, rooms[i]->y * rooms[i]->roomHeight, rooms[i]->x * rooms[i]->roomWidth + rooms[i]->roomWidth, 0, scalingFactor);
-					door->SetActorHiddenInGame(true);
-					door->SetActorEnableCollision(false);
+					
+					UFunction* func = door->FindFunction(FName("OpenDoor"));
+					if (func) door->ProcessEvent(func, nullptr);
+
 					roomMeshes.Add(door);
 					rooms[i]->doors.Add(door);		// Add a handle to this door into the current room.
 					roomEast->doors.Add(door);		// Add a handle to this door into the adjacent room.
@@ -406,8 +414,9 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 
 	for (AActor* door : room->doors)
 	{
-		door->SetActorHiddenInGame(false);
-		door->SetActorEnableCollision(true);
+		UFunction* func = door->FindFunction(FName("CloseDoor"));
+		if (func)
+			door->ProcessEvent(func, nullptr);
 	}
 
 	if (room->type == Room::Type::NORMAL)
@@ -472,8 +481,9 @@ void ALevelGen::unlockRoom(ARoomTrigger* roomTriggered)
 
 	for (AActor* door : room->doors)
 	{
-		door->SetActorHiddenInGame(true);
-		door->SetActorEnableCollision(false);
+		UFunction* func = door->FindFunction(FName("OpenDoor"));
+		if (func)
+			door->ProcessEvent(func, nullptr);
 	}
 
 	room->locked = false;
