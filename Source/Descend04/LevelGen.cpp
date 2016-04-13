@@ -393,6 +393,7 @@ void ALevelGen::generateRooms(uint8 count)
  */
 void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 {
+	float spawnX, spawnY;
 	int32 x = roomTriggered->getPosition().X;
 	int32 y = roomTriggered->getPosition().Y;
 
@@ -412,16 +413,34 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 	{
 		for (TSubclassOf<ACharacter> enemy : enemies)
 		{
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+			spawnX = room->y * room->roomHeight;		// Room center (x and y are flipped in world).
+			spawnY = room->x * room->roomWidth;			// Room center.
+
+			spawnX += FMath::RandRange((room->roomHeight / 4) * -1, (room->roomHeight / 4));	// Add randomness, half of room height.
+			spawnY += FMath::RandRange((room->roomWidth / 4) * -1, (room->roomWidth / 4));		// Add randomness, half od room width.
+
+			spawnThing(enemy, spawnX, spawnY, 40.f);
 		}
 	}
 	else if (room->type == Room::Type::BOSS)
 	{
 		for (TSubclassOf<ACharacter> enemy : enemies)
 		{
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
-			spawnThing(enemy, room->y * room->roomHeight, room->x * room->roomWidth, 40.f);
+			spawnX = room->y * room->roomHeight;		// Room center (x and y are flipped in world).
+			spawnY = room->x * room->roomWidth;			// Room center.
+
+			spawnX += FMath::RandRange((room->roomHeight / 4) * -1, (room->roomHeight / 4));	// Add randomness, half of room height.
+			spawnY += FMath::RandRange((room->roomWidth / 4) * -1, (room->roomWidth / 4));		// Add randomness, half od room width.
+
+			spawnThing(enemy, spawnX, spawnY, 40.f);
+
+			spawnX = room->y * room->roomHeight;		// Room center (x and y are flipped in world).
+			spawnY = room->x * room->roomWidth;			// Room center.
+
+			spawnX += FMath::RandRange((room->roomHeight / 4) * -1, (room->roomHeight / 4));	// Add randomness, half of room height.
+			spawnY += FMath::RandRange((room->roomWidth / 4) * -1, (room->roomWidth / 4));		// Add randomness, half od room width.
+
+			spawnThing(enemy, spawnX, spawnY, 40.f);
 		}
 	}
 
