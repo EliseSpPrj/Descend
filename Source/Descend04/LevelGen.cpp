@@ -345,7 +345,7 @@ void ALevelGen::generateRooms(uint8 count)
 				{
 					TSubclassOf<APickup> spawnItem = spawnItems[FMath::RandRange(0, spawnItems.Num() - 1)];
 
-					AActor* newItem = spawnThing(spawnItem, rooms[i]->y * rooms[i]->roomHeight + (240 * scalingFactor), rooms[i]->x * rooms[i]->roomWidth - ((230 + (j * 230)) * scalingFactor), 40.f);
+					AActor* newItem = spawnThing(spawnItem, rooms[i]->y * rooms[i]->roomHeight + (240 * scalingFactor), rooms[i]->x * rooms[i]->roomWidth + ((-230 + (j * 230)) * scalingFactor), 40.f);
 					roomMeshes.Add(newItem);
 
 					spawnItems.Remove(spawnItem);
