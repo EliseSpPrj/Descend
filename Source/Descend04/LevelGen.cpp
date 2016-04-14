@@ -478,6 +478,7 @@ void ALevelGen::unlockRoom(ARoomTrigger* roomTriggered)
 	int32 y = roomTriggered->getPosition().Y;
 
 	Room* room = getRoomAt(x, y);
+	if (!room) return;
 
 	for (AActor* door : room->doors)
 	{
