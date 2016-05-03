@@ -515,29 +515,56 @@ AActor* ALevelGen::spawnThing(TSubclassOf<AActor> thing, float x, float y, float
 	
 	if (scale != 1.f)
 	{
-		UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(newThing->GetComponentByClass(UStaticMeshComponent::StaticClass()));
-		if (StaticMeshComponent)
+
+		/*TArray<UActorComponent*> components = newThing->GetComponents();
+
+		for(auto &component : components)
 		{
-			FTransform Transform = StaticMeshComponent->GetComponentTransform();
+			FTransform transform = component->GetComponentTransform();	//Fuck you Unreal!
+			transform = transform.GetScaled(scale);
+			Cast<UStaticMeshComponent>(component)->SetWorldTransform(transform);
+		}*/
 
-			Transform = Transform.GetScaled(scale);		// Resize object
-			//Transform.ScaleTranslation(scale);			// Re-position object
+		FVector actorScale = newThing->GetActorScale3D();
+		actorScale *= scale;
+		newThing->SetActorScale3D(actorScale);
 
-			StaticMeshComponent->SetWorldTransform(Transform);
-		}
-		else
-		{
-			UBoxComponent* CollisionComponent = Cast<UBoxComponent>(newThing->GetComponentByClass(UBoxComponent::StaticClass()));
-			if (CollisionComponent)
-			{
-				FTransform Transform = CollisionComponent->GetComponentTransform();
+		//UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(newThing->GetComponentByClass(UStaticMeshComponent::StaticClass()));
+		//if (StaticMeshComponent)
+		//{
+		//	FTransform Transform = StaticMeshComponent->GetComponentTransform();
 
-				Transform = Transform.GetScaled(scale);		// Resize object
-				//Transform.ScaleTranslation(scale);			// Re-position object
+		//	Transform = Transform.GetScaled(scale);		// Resize object
+		//	//Transform.ScaleTranslation(scale);			// Re-position object
 
-				CollisionComponent->SetWorldTransform(Transform);
-			}
-		}
+		//	StaticMeshComponent->SetWorldTransform(Transform);
+		//}
+		//else
+		//{
+		//	UBoxComponent* CollisionComponent = Cast<UBoxComponent>(newThing->GetComponentByClass(UBoxComponent::StaticClass()));
+		//	if (CollisionComponent)
+		//	{
+		//		FTransform Transform = CollisionComponent->GetComponentTransform();
+
+		//		Transform = Transform.GetScaled(scale);		// Resize object
+		//		//Transform.ScaleTranslation(scale);			// Re-position object
+
+		//		CollisionComponent->SetWorldTransform(Transform);
+		//	}
+		//	else
+		//	{
+		//		USkeletalMeshComponent* Skele = Cast<USkeletalMeshComponent>(newThing->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+		//		if (Skele)
+		//		{
+		//			FTransform Transform = Skele->GetComponentTransform();
+
+		//			Transform = Transform.GetScaled(scale);		// Resize object
+		//			//Transform.ScaleTranslation(scale);			// Re-position object
+
+		//			Skele->SetWorldTransform(Transform);
+		//		}
+		//	}
+		//}
 	}
 
 	return newThing;
