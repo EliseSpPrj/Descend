@@ -49,7 +49,6 @@ private:
 	TArray<AActor*> roomMeshes;			// Walls, Corners, floors etc.
 	Room* rooms[256];
 	int roomsCount;
-	int32 currentLevel;
 	float const floorLevel = 200.f;		// Height; where to spawn stuff.
 
 	Room* getRoomAt(int32 x, int32 y);
@@ -57,6 +56,9 @@ private:
 	int32 spawnProps(Room* room, int32 minCount, int32 maxCount);
 
 protected:
+	UPROPERTY(BlueprintReadOnly)
+	int32 currentLevel;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Room floor")
 	TSubclassOf<ARoomWall> roomFloor;
 
