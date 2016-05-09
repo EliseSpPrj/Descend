@@ -402,6 +402,8 @@ void ALevelGen::generateRooms(uint8 count)
  */
 void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 {
+	isBossRoom = false;
+
 	float spawnX, spawnY;
 	int32 x = roomTriggered->getPosition().X;
 	int32 y = roomTriggered->getPosition().Y;
@@ -443,6 +445,8 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 	}
 	else if (room->type == Room::Type::BOSS)
 	{
+		isBossRoom = true;
+
 		if (bossesByLevel.Num())
 		{
 			int32 esdsIndex = currentLevel >= bossesByLevel.Num() ? 0 : currentLevel;
