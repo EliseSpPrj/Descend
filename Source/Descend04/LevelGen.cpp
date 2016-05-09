@@ -439,7 +439,7 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 				spawnX += FMath::RandRange((room->roomHeight / 6) * -1, (room->roomHeight / 6));	// Add randomness.
 				spawnY += FMath::RandRange((room->roomWidth / 6) * -1, (room->roomWidth / 6));		// Add randomness.
 
-				spawnThing(esDS.SelectionOfEnemies[randomIndex], spawnX, spawnY, 140.f);
+				spawnThing(esDS.SelectionOfEnemies[randomIndex], spawnX, spawnY, 160.f);
 			}
 		}
 	}
@@ -463,7 +463,7 @@ void ALevelGen::lockRoom(ARoomTrigger* roomTriggered)
 				spawnX += FMath::RandRange((room->roomHeight / 6) * -1, (room->roomHeight / 6));	// Add randomness.
 				spawnY += FMath::RandRange((room->roomWidth / 6) * -1, (room->roomWidth / 6));		// Add randomness.
 
-				spawnThing(esDS.SelectionOfEnemies[randomIndex], spawnX, spawnY, 140.f);
+				spawnThing(esDS.SelectionOfEnemies[randomIndex], spawnX, spawnY, 160.f);
 			}
 		}
 	}
