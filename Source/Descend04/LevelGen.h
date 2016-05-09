@@ -57,6 +57,9 @@ private:
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
+	bool isBossRoom;
+
+	UPROPERTY(BlueprintReadOnly)
 	int32 currentLevel;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Room floor")
